@@ -18,7 +18,7 @@ func Init() {
 	db, err = sql.Open("mysql", connectionString)
 
 	if err != nil {
-		panic("connectionString error!!")
+		panic("connection error!!")
 	}
 
 	err = db.Ping()
