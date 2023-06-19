@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"app/modules/tags/models"
+	"app/modules/systems/models"
 	"app/packages/builders"
 	"app/packages/database"
 	"app/packages/helpers/converter"
@@ -12,29 +12,34 @@ import (
 	"net/http"
 )
 
-func GetAllTag(page, pageSize int, path string, view string) (response.Response, error) {
+func GetAllDictionary(page, pageSize int, path string, view string) (response.Response, error) {
 	// Declaration
-	var obj models.GetAllTag
-	var arrobj []models.GetAllTag
+	var obj models.GetAllDictionary
+	var arrobj []models.GetAllDictionary
 	var res response.Response
-	var baseTable = "tags"
-	var secondTable = "dictionaries"
+	var baseTable = "dictionaries"
+	var secondTable = "dictionaries_types"
+	var thirdTable = "admins"
 	var whereActive string
 	var sqlStatement string
 
 	// Nullable column
-	var TagCategory sql.NullString
+	var DctDesc sql.NullString
+	var UpdatedAt sql.NullString
+	var UpdatedBy sql.NullString
 
 	// Query builder
-	selectTemplate := builders.GetTemplateSelect("tag_info", nil, nil)
+	selectTemplate := builders.GetTemplateSelect("dct_info", nil, nil)
+	extSelect := builders.GetTemplateSelect("properties", &baseTable, &thirdTable)
 	firstLogicWhere := builders.GetTemplateLogic(view)
 	whereActive = baseTable + firstLogicWhere
-	join1 := builders.GetTemplateJoin("total", baseTable, "tag_category", secondTable, "slug_name", true)
-	order := builders.GetTemplateOrder("dynamic_data", baseTable, "tag_name")
+	order := builders.GetTemplateOrder("dynamic_data", baseTable, "dct_name")
+	join1 := builders.GetTemplateJoin("total", baseTable, "dct_type", secondTable, "app_code", false)
+	join2 := builders.GetTemplateJoin("total", baseTable, "created_by", thirdTable, "id", true)
 
-	sqlStatement = "SELECT " + selectTemplate + " " +
+	sqlStatement = "SELECT " + selectTemplate + ", " + extSelect + " " +
 		"FROM " + baseTable + " " +
-		join1 +
+		join1 + join2 +
 		"WHERE " + whereActive +
 		"ORDER BY " + order +
 		"LIMIT ? OFFSET ?"
@@ -53,14 +58,23 @@ func GetAllTag(page, pageSize int, path string, view string) (response.Response,
 	for rows.Next() {
 		err = rows.Scan(
 			&obj.SlugName,
-			&obj.TagName,
-			&TagCategory)
+			&obj.DctName,
+			&obj.DctType,
+			&DctDesc,
+			&obj.TypeName,
+			&obj.CreatedAt,
+			&obj.CreatedBy,
+			&UpdatedAt,
+			&UpdatedBy,
+		)
 
 		if err != nil {
 			return res, err
 		}
 
-		obj.TagCategory = converter.CheckNullString(TagCategory)
+		obj.DctDesc = converter.CheckNullString(DctDesc)
+		obj.UpdatedAt = converter.CheckNullString(UpdatedAt)
+		obj.UpdatedBy = converter.CheckNullString(UpdatedBy)
 
 		arrobj = append(arrobj, obj)
 	}
@@ -76,7 +90,7 @@ func GetAllTag(page, pageSize int, path string, view string) (response.Response,
 
 	// Response
 	res.Status = http.StatusOK
-	res.Message = "Tag Found"
+	res.Message = "Dictionary Found"
 	res.Data = map[string]interface{}{
 		"current_page":   page,
 		"data":           arrobj,
