@@ -12,4 +12,8 @@ type (
 		UpdatedAt string `json:"updated_at"`
 		UpdatedBy string `json:"updated_by"`
 	}
+	GetAllColor struct {
+		DctName  string `json:"dct_name"`
+		DctColor string `json:"dct_color"`
+	}
 )

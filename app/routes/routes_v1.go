@@ -22,6 +22,7 @@ func InitV1() *echo.Echo {
 
 	// Dictionary
 	e.GET("api/v1/dct", dcthandlers.GetAllActiveDictionaries)
+	e.GET("api/v1/dct/color", dcthandlers.GetAllRecentColor)
 	e.GET("api/v1/trash/dct", dcthandlers.GetAllTrashDictionaries)
 
 	return e

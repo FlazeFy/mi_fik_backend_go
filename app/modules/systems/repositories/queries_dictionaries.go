@@ -113,3 +113,65 @@ func GetAllDictionary(page, pageSize int, path string, view string) (response.Re
 
 	return res, nil
 }
+
+func GetAllRecentColor(view string) (response.Response, error) {
+	// Declaration
+	var obj models.GetAllColor
+	var arrobj []models.GetAllColor
+	var res response.Response
+	var baseTable = "dictionaries"
+	var sqlStatement string
+
+	// Nullable column
+	var DctColor sql.NullString
+
+	// Query Builder
+	firstConcat := builders.GetTemplateConcat("value_group", "dct_name")
+	selectTemplate := firstConcat + ", dct_color "
+	firstLogicWhere := builders.GetTemplateLogic(view)
+	whereActive := baseTable + firstLogicWhere
+	order := builders.GetTemplateOrder("most_used_normal", baseTable, "dct_name")
+	group := builders.GetTemplateGroup(true, "dct_color")
+
+	sqlStatement = "SELECT " + selectTemplate +
+		"FROM " + baseTable + " " +
+		"WHERE " + whereActive + " " +
+		group +
+		"ORDER BY " + order
+
+	// Exec
+	con := database.CreateCon()
+	rows, err := con.Query(sqlStatement)
+	defer rows.Close()
+
+	if err != nil {
+		return res, err
+	}
+
+	// Map
+	for rows.Next() {
+		err = rows.Scan(
+			&obj.DctName,
+			&DctColor,
+		)
+
+		if err != nil {
+			return res, err
+		}
+
+		obj.DctColor = converter.CheckNullString(DctColor)
+
+		arrobj = append(arrobj, obj)
+	}
+
+	// Response
+	res.Status = http.StatusOK
+	res.Message = generator.GenerateNormalMsg("dictionary color", len(arrobj))
+	if len(arrobj) == 0 {
+		res.Data = nil
+	} else {
+		res.Data = arrobj
+	}
+
+	return res, nil
+}

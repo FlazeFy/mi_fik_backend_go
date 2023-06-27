@@ -18,6 +18,15 @@ func GetAllActiveDictionaries(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+func GetAllRecentColor(c echo.Context) error {
+	result, err := repositories.GetAllRecentColor("active")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
 func GetAllTrashDictionaries(c echo.Context) error {
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	result, err := repositories.GetAllDictionary(page, 10, "api/v1/dct", "trash")
