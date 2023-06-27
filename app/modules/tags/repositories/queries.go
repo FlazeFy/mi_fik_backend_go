@@ -76,7 +76,7 @@ func GetAllTag(page, pageSize int, path string, view string) (response.Response,
 
 	// Response
 	res.Status = http.StatusOK
-	res.Message = generator.GenerateNormalMsg("Tag", total)
+	res.Message = generator.GenerateQueryMsg("Tag", total)
 	if total == 0 {
 		res.Data = nil
 	} else {
@@ -163,7 +163,7 @@ func GetAllTagByCategory(page, pageSize int, path string, view string, category 
 
 	// Response
 	res.Status = http.StatusOK
-	res.Message = generator.GenerateNormalMsg("Tag", total)
+	res.Message = generator.GenerateQueryMsg("Tag", total)
 	if total == 0 {
 		res.Data = nil
 	} else {

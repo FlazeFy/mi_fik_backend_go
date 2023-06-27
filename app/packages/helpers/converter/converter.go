@@ -2,6 +2,7 @@ package converter
 
 import (
 	"database/sql"
+	"strings"
 )
 
 func CheckNullString(data sql.NullString) string {
@@ -13,4 +14,9 @@ func CheckNullString(data sql.NullString) string {
 	}
 
 	return res
+}
+
+func TotalChar(val string) int {
+	trimed := strings.TrimSpace(val)
+	return len(trimed)
 }

@@ -10,9 +10,17 @@ func GetTemplateSelect(name string, firstTable, secondTable *string) string {
 	} else if name == "properties" {
 		if firstTable == nil {
 			return "created_at, created_by, updated_at, updated_by"
+		} else if *firstTable == "users" {
+			return "created_at, updated_at, updated_by"
 		} else {
 			return *firstTable + ".created_at, " + *secondTable + ".username as created_by, " + *firstTable + ".updated_at, " + *secondTable + ".username as updated_by"
 		}
+	} else if name == "user_credential" {
+		return "firebase_fcm_token, username, email, password, image_url"
+	} else if name == "user_mini_info" {
+		return "first_name, last_name, role"
+	} else if name == "user_joined_info" {
+		return "accepted_at, accepted_by, is_accepted"
 	}
 	return ""
 }

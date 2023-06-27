@@ -90,7 +90,7 @@ func GetAllDictionary(page, pageSize int, path string, view string) (response.Re
 
 	// Response
 	res.Status = http.StatusOK
-	res.Message = generator.GenerateNormalMsg("dictionary", total)
+	res.Message = generator.GenerateQueryMsg("dictionary", total)
 	if total == 0 {
 		res.Data = nil
 	} else {
@@ -166,7 +166,7 @@ func GetAllRecentColor(view string) (response.Response, error) {
 
 	// Response
 	res.Status = http.StatusOK
-	res.Message = generator.GenerateNormalMsg("dictionary color", len(arrobj))
+	res.Message = generator.GenerateQueryMsg("dictionary color", len(arrobj))
 	if len(arrobj) == 0 {
 		res.Data = nil
 	} else {
