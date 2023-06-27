@@ -1,5 +1,7 @@
 package builders
 
+import "app/packages/helpers/typography"
+
 func GetTemplateSelect(name string, firstTable, secondTable *string) string {
 	if name == "tag_info" {
 		return "tags.slug_name, tag_name, dictionaries.dct_name as tag_category"
@@ -11,6 +13,14 @@ func GetTemplateSelect(name string, firstTable, secondTable *string) string {
 		} else {
 			return *firstTable + ".created_at, " + *secondTable + ".username as created_by, " + *firstTable + ".updated_at, " + *secondTable + ".username as updated_by"
 		}
+	}
+	return ""
+}
+
+func GetTemplateGeneralSelect(name string, firstTable *string) string {
+	ftable := typography.RemoveLastChar(*firstTable, "s")
+	if name == "info" {
+		return *firstTable + ".slug_name, " + ftable + "_name, " + ftable + "_desc"
 	}
 	return ""
 }

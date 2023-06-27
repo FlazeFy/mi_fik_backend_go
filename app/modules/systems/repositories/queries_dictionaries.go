@@ -5,6 +5,7 @@ import (
 	"app/packages/builders"
 	"app/packages/database"
 	"app/packages/helpers/converter"
+	"app/packages/helpers/generator"
 	"app/packages/helpers/response"
 	"app/packages/utils/pagination"
 	"database/sql"
@@ -20,7 +21,6 @@ func GetAllDictionary(page, pageSize int, path string, view string) (response.Re
 	var baseTable = "dictionaries"
 	var secondTable = "dictionaries_types"
 	var thirdTable = "admins"
-	var whereActive string
 	var sqlStatement string
 
 	// Nullable column
@@ -32,7 +32,7 @@ func GetAllDictionary(page, pageSize int, path string, view string) (response.Re
 	selectTemplate := builders.GetTemplateSelect("dct_info", nil, nil)
 	extSelect := builders.GetTemplateSelect("properties", &baseTable, &thirdTable)
 	firstLogicWhere := builders.GetTemplateLogic(view)
-	whereActive = baseTable + firstLogicWhere
+	whereActive := baseTable + firstLogicWhere
 	order := builders.GetTemplateOrder("dynamic_data", baseTable, "dct_name")
 	join1 := builders.GetTemplateJoin("total", baseTable, "dct_type", secondTable, "app_code", false)
 	join2 := builders.GetTemplateJoin("total", baseTable, "created_by", thirdTable, "id", true)
@@ -90,21 +90,25 @@ func GetAllDictionary(page, pageSize int, path string, view string) (response.Re
 
 	// Response
 	res.Status = http.StatusOK
-	res.Message = "Dictionary Found"
-	res.Data = map[string]interface{}{
-		"current_page":   page,
-		"data":           arrobj,
-		"first_page_url": pagination.FirstPageURL,
-		"from":           pagination.From,
-		"last_page":      pagination.LastPage,
-		"last_page_url":  pagination.LastPageURL,
-		"links":          pagination.Links,
-		"next_page_url":  pagination.NextPageURL,
-		"path":           pagination.Path,
-		"per_page":       pageSize,
-		"prev_page_url":  pagination.PrevPageURL,
-		"to":             pagination.To,
-		"total":          total,
+	res.Message = generator.GenerateNormalMsg("dictionary", total)
+	if total == 0 {
+		res.Data = nil
+	} else {
+		res.Data = map[string]interface{}{
+			"current_page":   page,
+			"data":           arrobj,
+			"first_page_url": pagination.FirstPageURL,
+			"from":           pagination.From,
+			"last_page":      pagination.LastPage,
+			"last_page_url":  pagination.LastPageURL,
+			"links":          pagination.Links,
+			"next_page_url":  pagination.NextPageURL,
+			"path":           pagination.Path,
+			"per_page":       pageSize,
+			"prev_page_url":  pagination.PrevPageURL,
+			"to":             pagination.To,
+			"total":          total,
+		}
 	}
 
 	return res, nil

@@ -17,6 +17,7 @@ func InitV1() *echo.Echo {
 
 	// Tag
 	e.GET("api/v1/tag", taghandlers.GetAllActiveTag)
+	e.GET("api/v1/tag/:category", taghandlers.GetAllActiveTagByCategory)
 	e.GET("api/v1/trash/tag", taghandlers.GetAllTrashTag)
 
 	// Dictionary
