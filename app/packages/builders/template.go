@@ -16,7 +16,7 @@ func GetTemplateSelect(name string, firstTable, secondTable *string) string {
 			return *firstTable + ".created_at, " + *secondTable + ".username as created_by, " + *firstTable + ".updated_at, " + *secondTable + ".username as updated_by"
 		}
 	} else if name == "user_credential" {
-		return "firebase_fcm_token, username, email, password, image_url"
+		return "username, email, password, image_url"
 	} else if name == "user_mini_info" {
 		return "first_name, last_name, role"
 	} else if name == "user_joined_info" {
@@ -86,4 +86,8 @@ func GetTemplateLogic(name string) string {
 		return ".deleted_at IS NOT NULL "
 	}
 	return ""
+}
+
+func GetWhereMine(token string) string {
+	return "users_tokens.token ='" + token + "'"
 }

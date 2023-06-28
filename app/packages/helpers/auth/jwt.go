@@ -3,6 +3,7 @@ package auth
 import (
 	"app/configs"
 
+	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,4 +33,19 @@ func GetJWTConfiguration(name string) string {
 		return conf.JWT_EXP
 	}
 	return ""
+}
+
+func GetTokenHeader(c echo.Context) (bool, string) {
+	authHeader := c.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		return false, "No authorization header present"
+	}
+
+	const bearerPrefix = "Bearer "
+	if len(authHeader) < len(bearerPrefix) || authHeader[:len(bearerPrefix)] != bearerPrefix {
+		return false, "Invalid authorization header format"
+	}
+
+	token := authHeader[len(bearerPrefix):]
+	return true, token
 }

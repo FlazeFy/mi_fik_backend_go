@@ -81,8 +81,8 @@ func PostUserRegister(body models.UserRegister) (response.Response, error) {
 
 		sqlStatement := "INSERT INTO " + baseTable + " " +
 			"(id, " + colFirstTemplate + ", " + colSecondTemplate + ", valid_until, " + colThirdTemplate +
-			", deleted_at, deleted_by, " + colFourthTemplate + ") " + " " +
-			"VALUES (?, null, ?, ?, ?, null, ?, ?, null, ?, ?, null, null, null, null, null, null, 0)"
+			", deleted_at, deleted_by, " + colFourthTemplate + ", language_code) " + " " +
+			"VALUES (?, ?, ?, ?, null, ?, ?, null, ?, ?, null, null, null, null, null, null, 0, 'en')"
 
 		// Exec
 		con := database.CreateCon()
