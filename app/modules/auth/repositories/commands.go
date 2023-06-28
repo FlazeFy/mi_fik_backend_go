@@ -13,43 +13,44 @@ import (
 	"net/http"
 )
 
-func PostUserAuth(username, password string) (bool, error, string) {
+func PostUserAuth(username, password string) (string, error, string) {
 	status, msg := validations.GetValidateLogin(username, password)
 	if status {
 		// Declaration
 		var obj models.UserLogin
 		var pwd string
+		var id string
 
 		// Exec
-		selectTemplate := "username, password "
+		selectTemplate := builders.GetTemplateSelect("auth", nil, nil)
 		baseTable := "users"
-		sqlStatement := "SELECT " + selectTemplate +
+		sqlStatement := "SELECT id, " + selectTemplate + " " +
 			"FROM " + baseTable +
 			" WHERE username = ?"
 
 		con := database.CreateCon()
 		err := con.QueryRow(sqlStatement, username).Scan(
-			&obj.Username, &pwd,
+			&id, &obj.Username, &pwd,
 		)
 
 		if err == sql.ErrNoRows {
-			return false, nil, "Account is not registered"
+			return "", nil, "Account is not registered"
 		} else if err != nil {
-			return false, err, "Something went wrong. Please contact Admin"
+			return "", err, "Something went wrong. Please contact Admin"
 		}
 
 		match, err := auth.CheckPasswordHash(password, pwd)
 		if !match {
-			return false, nil, "Password incorrect"
+			return "", nil, "Password incorrect"
 		}
 
 		if err != nil {
-			return false, err, "Something went wrong. Please contact Admin"
+			return "", err, "Something went wrong. Please contact Admin"
 		}
 
-		return true, nil, ""
+		return id, nil, ""
 	} else {
-		return false, nil, msg
+		return "", nil, msg
 	}
 }
 
@@ -61,6 +62,10 @@ func PostUserRegister(body models.UserRegister) (response.Response, error) {
 		// Declaration
 		var baseTable = "users"
 		id, err := generator.GenerateUUID(16)
+		if err != nil {
+			return res, err
+		}
+
 		createdAt := generator.GenerateTimeNow("timestamp")
 		hashPass := auth.GenerateHashPassword(body.Password)
 
@@ -106,4 +111,39 @@ func PostUserRegister(body models.UserRegister) (response.Response, error) {
 		res.Data = map[string]string{"result": "0 rows affected"}
 	}
 	return res, nil
+}
+
+func PostAccessToken(body models.UserToken) error {
+	// Declaration
+	var baseTable = "users_tokens"
+	id, err := generator.GenerateUUID(16)
+	if err != nil {
+		return err
+	}
+	createdAt := generator.GenerateTimeNow("timestamp")
+
+	// Query builder
+	colFirstTemplate := builders.GetTemplateSelect("user_access", nil, nil)
+
+	sqlStatement := "INSERT INTO " + baseTable + " " +
+		"(id, " + colFirstTemplate + ", token, last_used_at, created_at) " + " " +
+		"VALUES (?, ?, ?, ?, null, ?)"
+
+	// Exec
+	con := database.CreateCon()
+	cmd, err := con.Prepare(sqlStatement)
+	if err != nil {
+		return err
+	}
+
+	result, err := cmd.Exec(id, body.ContextType, body.ContextId, body.Token, createdAt)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 {
+		return err
+	}
+	return nil
 }

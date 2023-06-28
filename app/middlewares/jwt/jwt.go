@@ -6,6 +6,7 @@ import (
 	"app/packages/helpers/auth"
 	"app/packages/helpers/generator"
 	"app/packages/helpers/response"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,9 +16,31 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
-var IsAuthenticated = middleware.JWTWithConfig(middleware.JWTConfig{
-	SigningKey: []byte("secret"),
-})
+func CustomJWTAuth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		err := middleware.JWTWithConfig(middleware.JWTConfig{
+			SigningKey: []byte("secret"),
+		})(next)(c)
+
+		if err != nil {
+			if errJWT, res := err.(*jwt.ValidationError); res {
+				if errJWT.Errors&jwt.ValidationErrorExpired != 0 {
+					var res response.Response
+					res.Status = http.StatusUnauthorized
+					res.Message = "Your access is expired, please try sign in again"
+					return c.JSON(http.StatusUnauthorized, res)
+				}
+			}
+
+			var res response.Response
+			res.Status = http.StatusUnauthorized
+			res.Message = "Token invalid. Please check again"
+			return c.JSON(http.StatusUnauthorized, res)
+		}
+
+		return nil
+	}
+}
 
 func CheckLogin(c echo.Context, body models.UserLogin) (response.Response, error) {
 	var res response.Response
@@ -29,9 +52,9 @@ func CheckLogin(c echo.Context, body models.UserLogin) (response.Response, error
 
 	duration := time.Duration(timeExpStr) * time.Second
 
-	authResult, err, ctx := repositories.PostUserAuth(body.Username, body.Password)
+	id, err, ctx := repositories.PostUserAuth(body.Username, body.Password)
 	// Response
-	if err == nil && !authResult {
+	if err == nil && id == "" {
 		res.Status = http.StatusUnprocessableEntity
 		res.Message = ctx
 		return res, err
@@ -43,7 +66,7 @@ func CheckLogin(c echo.Context, body models.UserLogin) (response.Response, error
 		return res, err
 	}
 
-	if !authResult {
+	if id == "" {
 		res.Status = http.StatusUnauthorized
 		res.Message = ctx
 		return res, err
@@ -55,14 +78,26 @@ func CheckLogin(c echo.Context, body models.UserLogin) (response.Response, error
 	claims["username"] = body.Username
 	claims["level"] = "application"
 	claims["exp"] = time.Now().Add(time.Hour * duration).Unix()
-
-	// Response
 	t, err := token.SignedString([]byte("secret"))
 	if err != nil {
 		res.Status = http.StatusInternalServerError
 		res.Message = err.Error()
 	}
 
+	// DB Token
+	var obj models.UserToken
+	obj.ContextType = "user" // For now
+	obj.ContextId = id
+	obj.Token = fmt.Sprintf("%s", t)
+
+	errAccs := repositories.PostAccessToken(obj)
+	if errAccs != nil {
+		res.Status = http.StatusInternalServerError
+		res.Message = ctx
+		return res, err
+	}
+
+	// Response
 	res.Status = http.StatusOK
 	res.Message = generator.GenerateCommandMsg("login", "", true)
 	res.Data = map[string]string{
