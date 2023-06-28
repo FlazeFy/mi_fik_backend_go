@@ -13,22 +13,22 @@ func PostLoginUser(c echo.Context) error {
 	var body models.UserLogin
 	err := c.Bind(&body)
 	if err != nil {
-		panic(err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
-	result := middlewares.CheckLogin(c, body)
-	if result == nil {
-		return c.JSON(http.StatusInternalServerError, nil)
+	result, err := middlewares.CheckLogin(c, body)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.JSON(http.StatusOK, result)
 }
 
 func PostRegister(c echo.Context) error {
 	var body models.UserRegister
 	err := c.Bind(&body)
 	if err != nil {
-		panic(err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
 	result, err := repositories.PostUserRegister(body)

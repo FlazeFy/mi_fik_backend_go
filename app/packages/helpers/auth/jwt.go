@@ -2,18 +2,14 @@ package auth
 
 import (
 	"app/configs"
-	"net/http"
 
-	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GenerateHashPassword(c echo.Context) error {
-	password := c.Param("password")
+func GenerateHashPassword(pass string) string {
+	hash, _ := HashPassword(pass)
 
-	hash, _ := HashPassword(password)
-
-	return c.JSON(http.StatusOK, hash)
+	return hash
 }
 
 func HashPassword(password string) (string, error) {

@@ -9,55 +9,66 @@ import (
 	"app/packages/helpers/generator"
 	"app/packages/helpers/response"
 	"database/sql"
+	"fmt"
 	"net/http"
-	"time"
 )
 
 func PostUserAuth(username, password string) (bool, error, string) {
-	var obj models.UserLogin
-	var pwd string
+	status, msg := validations.GetValidateLogin(username, password)
+	if status {
+		// Declaration
+		var obj models.UserLogin
+		var pwd string
 
-	con := database.CreateCon()
+		// Exec
+		selectTemplate := "username, password "
+		baseTable := "users"
+		sqlStatement := "SELECT " + selectTemplate +
+			"FROM " + baseTable +
+			" WHERE username = ?"
 
-	selectTemplate := "username, password "
-	baseTable := "users"
-	sqlStatement := "SELECT " + selectTemplate +
-		"FROM " + baseTable +
-		" WHERE username = ?"
+		con := database.CreateCon()
+		err := con.QueryRow(sqlStatement, username).Scan(
+			&obj.Username, &pwd,
+		)
 
-	err := con.QueryRow(sqlStatement, username).Scan(
-		&obj.Username, &pwd,
-	)
+		if err == sql.ErrNoRows {
+			return false, nil, "Account is not registered"
+		} else if err != nil {
+			return false, err, "Something went wrong. Please contact Admin"
+		}
 
-	if err == sql.ErrNoRows {
-		return false, err, "Account is not registered"
+		match, err := auth.CheckPasswordHash(password, pwd)
+		if !match {
+			return false, nil, "Password incorrect"
+		}
+
+		if err != nil {
+			return false, err, "Something went wrong. Please contact Admin"
+		}
+
+		return true, nil, ""
+	} else {
+		return false, nil, msg
 	}
-
-	if err != nil {
-		return false, err, "Something wrong. Please contact Admin"
-	}
-
-	match, err := auth.CheckPasswordHash(password, pwd)
-	if !match {
-		return false, err, "Username or password incorrect"
-	}
-
-	return true, nil, ""
 }
 
 func PostUserRegister(body models.UserRegister) (response.Response, error) {
-	con := database.CreateCon()
 	var res response.Response
 	status, msg := validations.GetValidateRegister(body)
 
 	if status {
+		// Declaration
 		var baseTable = "users"
-		colFirstTemplate := builders.GetTemplateGeneralSelect("user_credential", nil)
-		colSecondTemplate := builders.GetTemplateGeneralSelect("user_mini_info", nil)
-		colThirdTemplate := builders.GetTemplateGeneralSelect("properties", &baseTable)
-		colFourthTemplate := builders.GetTemplateGeneralSelect("user_joined_info", &baseTable)
 		id, err := generator.GenerateUUID(16)
-		now := time.Now().Unix()
+		createdAt := generator.GenerateTimeNow("timestamp")
+		hashPass := auth.GenerateHashPassword(body.Password)
+
+		// Query builder
+		colFirstTemplate := builders.GetTemplateSelect("user_credential", nil, nil)
+		colSecondTemplate := builders.GetTemplateSelect("user_mini_info", nil, nil)
+		colThirdTemplate := builders.GetTemplateSelect("properties", &baseTable, nil)
+		colFourthTemplate := builders.GetTemplateSelect("user_joined_info", &baseTable, nil)
 
 		if err != nil {
 			return res, err
@@ -68,31 +79,31 @@ func PostUserRegister(body models.UserRegister) (response.Response, error) {
 			", deleted_at, deleted_by, " + colFourthTemplate + ") " + " " +
 			"VALUES (?, null, ?, ?, ?, null, ?, ?, null, ?, ?, null, null, null, null, null, null, 0)"
 
+		// Exec
+		con := database.CreateCon()
 		cmd, err := con.Prepare(sqlStatement)
+		defer cmd.Close()
 
 		if err != nil {
 			return res, err
 		}
 
-		result, err := cmd.Exec(id, body.Username, body.Email, body.Password, body.FirstName, body.LastName, body.ValidUntil, now)
+		result, err := cmd.Exec(id, body.Username, body.Email, hashPass, body.FirstName, body.LastName, body.ValidUntil, createdAt)
 		if err != nil {
 			return res, err
 		}
 
-		lastInsertedId, err := result.LastInsertId()
-		if err != nil {
-			return res, err
-		}
+		rowsAffected, _ := result.RowsAffected()
+		resultStr := fmt.Sprintf("%d", rowsAffected)
 
+		// Response
 		res.Status = http.StatusOK
 		res.Message = generator.GenerateCommandMsg("account", "register", true)
-		res.Data = map[string]int64{
-			"id": lastInsertedId,
-			// "detail":body
-		}
+		res.Data = map[string]string{"last_inserted_id": id, "result": resultStr + " rows affected"}
 	} else {
 		res.Status = http.StatusUnprocessableEntity
-		res.Message = generator.GenerateCommandMsg("account "+msg, "register", false)
+		res.Message = generator.GenerateCommandMsg("account. "+msg, "register", false)
+		res.Data = map[string]string{"result": "0 rows affected"}
 	}
 	return res, nil
 }

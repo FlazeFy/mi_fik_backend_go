@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"time"
 )
 
 func GenerateUUID(len int) (string, error) {
@@ -27,4 +28,13 @@ func GenerateUUID(len int) (string, error) {
 	}
 
 	return id, nil
+}
+
+func GenerateTimeNow(name string) string {
+	if name == "timestamp" {
+		now := time.Now()
+		res := now.Format("2006-01-02 15:04:05")
+		return res
+	}
+	return ""
 }
