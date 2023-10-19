@@ -37,6 +37,7 @@ func InitV1() *echo.Echo {
 
 	// Stats
 	e.GET("api/v1/stats/:ord/:limit", statshandlers.GetMostAppearError)
+	e.GET("api/v1/stats/tagcat/:ord/:limit", statshandlers.GetMostCreatedTagByCategory)
 
 	// =============== Private routes ===============
 	// Tag

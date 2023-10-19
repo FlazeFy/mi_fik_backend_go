@@ -95,11 +95,18 @@ func GetWhereMine(token string) string {
 }
 
 // Stats
-func GetTemplateStats(ctx, firstTable, name, ord string) string {
+func GetTemplateStats(ctx, firstTable, name, ord string, joinArgs *string) string {
+	// Nullable args
+	var args string
+	if joinArgs == nil {
+		args = ""
+	} else {
+		args = *joinArgs
+	}
 	// Notes :
 	// Full query
 	if name == "most_appear" {
-		return "SELECT " + ctx + " as context, COUNT(1) AS total FROM " + firstTable + " GROUP BY " + ctx + " ORDER BY total " + ord
+		return "SELECT " + ctx + " as context, COUNT(1) AS total FROM " + firstTable + " " + args + " GROUP BY " + ctx + " ORDER BY total " + ord
 	}
 
 	return ""
