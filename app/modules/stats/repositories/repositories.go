@@ -79,7 +79,7 @@ func GetMostAppearError(page, pageSize int, path string, ord string, limit strin
 	return res, nil
 }
 
-func GetMostCreatedTagByCategory(page, pageSize int, path string, ord string, limit string) (response.Response, error) {
+func GetMostCreatedTagByCategory(path string, ord string, limit string) (response.Response, error) {
 	// Declaration
 	var obj models.GetMostAppear
 	var arrobj []models.GetMostAppear
@@ -105,6 +105,71 @@ func GetMostCreatedTagByCategory(page, pageSize int, path string, ord string, li
 	con := database.CreateCon()
 	rows, err := con.Query(sqlStatement)
 	defer rows.Close()
+
+	if err != nil {
+		return res, err
+	}
+
+	// Map
+	for rows.Next() {
+		err = rows.Scan(
+			&Context,
+			&totalStr)
+
+		if err != nil {
+			return res, err
+		}
+
+		// Converted
+		totalInt, err := strconv.Atoi(totalStr)
+		if err != nil {
+			return res, err
+		}
+
+		obj.Context = converter.CheckNullString(Context)
+		obj.Total = totalInt
+		arrobj = append(arrobj, obj)
+	}
+
+	// Total
+	total, err := builders.GetTotalCount(con, baseTable, nil)
+	if err != nil {
+		return res, err
+	}
+
+	// Response
+	res.Status = http.StatusOK
+	res.Message = generator.GenerateQueryMsg("Stats", total)
+	if total == 0 {
+		res.Data = nil
+	} else {
+		res.Data = arrobj
+	}
+
+	return res, nil
+}
+
+func GetMostValidUntilUser(path string) (response.Response, error) {
+	// Declaration
+	var obj models.GetMostAppear
+	var arrobj []models.GetMostAppear
+	var res response.Response
+	var baseTable = "users"
+
+	// Converted column
+	var totalStr string
+
+	// Nullable column
+	var Context sql.NullString
+
+	// Query builder
+	sqlStatement := builders.GetTemplateStats("valid_until", baseTable, "most_appear", "DESC", nil)
+
+	// Exec
+	con := database.CreateCon()
+	rows, err := con.Query(sqlStatement)
+	defer rows.Close()
+	fmt.Println(sqlStatement)
 
 	if err != nil {
 		return res, err

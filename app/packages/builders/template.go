@@ -95,7 +95,7 @@ func GetWhereMine(token string) string {
 }
 
 // Stats
-func GetTemplateStats(ctx, firstTable, name, ord string, joinArgs *string) string {
+func GetTemplateStats(ctx, firstTable, name string, ord string, joinArgs *string) string {
 	// Nullable args
 	var args string
 	if joinArgs == nil {

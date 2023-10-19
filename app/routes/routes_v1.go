@@ -36,8 +36,9 @@ func InitV1() *echo.Echo {
 	e.GET("api/v1/dct/color", dcthandlers.GetAllRecentColor)
 
 	// Stats
-	e.GET("api/v1/stats/:ord/:limit", statshandlers.GetMostAppearError)
+	e.GET("api/v1/stats/err/:ord/:limit", statshandlers.GetMostAppearError)
 	e.GET("api/v1/stats/tagcat/:ord/:limit", statshandlers.GetMostCreatedTagByCategory)
+	e.GET("api/v1/stats/user/valid", statshandlers.GetMostValidUntilUser)
 
 	// =============== Private routes ===============
 	// Tag
