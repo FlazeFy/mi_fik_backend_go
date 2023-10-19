@@ -2,10 +2,16 @@ package builders
 
 import "database/sql"
 
-func GetTotalCount(con *sql.DB, table string, view string) (int, error) {
+func GetTotalCount(con *sql.DB, table string, view *string) (int, error) {
 	var count int
+	var sqlStatement string
 
-	sqlStatement := "SELECT COUNT(*) FROM " + table + " WHERE " + view
+	// Fix this. if table empty, there will be an error
+	if view != nil {
+		sqlStatement = "SELECT COUNT(*) FROM " + table + " WHERE " + *view
+	} else {
+		sqlStatement = "SELECT COUNT(*) FROM " + table
+	}
 
 	err := con.QueryRow(sqlStatement).Scan(&count)
 	if err != nil {

@@ -80,7 +80,7 @@ func GetAllDictionary(page, pageSize int, path string, view string) (response.Re
 	}
 
 	// Page
-	total, err := builders.GetTotalCount(con, baseTable, whereActive)
+	total, err := builders.GetTotalCount(con, baseTable, &whereActive)
 	if err != nil {
 		return res, err
 	}

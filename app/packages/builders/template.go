@@ -1,6 +1,8 @@
 package builders
 
-import "app/packages/helpers/typography"
+import (
+	"app/packages/helpers/typography"
+)
 
 func GetTemplateSelect(name string, firstTable, secondTable *string) string {
 	if name == "tag_info" {
@@ -90,4 +92,15 @@ func GetTemplateLogic(name string) string {
 
 func GetWhereMine(token string) string {
 	return "users_tokens.token ='" + token + "'"
+}
+
+// Stats
+func GetTemplateStats(ctx, firstTable, name, ord string) string {
+	// Notes :
+	// Full query
+	if name == "most_appear" {
+		return "SELECT " + ctx + " as context, COUNT(1) AS total FROM " + firstTable + " GROUP BY " + ctx + " ORDER BY total " + ord
+	}
+
+	return ""
 }

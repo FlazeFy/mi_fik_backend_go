@@ -66,7 +66,7 @@ func GetAllTag(page, pageSize int, path string, view string) (response.Response,
 	}
 
 	// Page
-	total, err := builders.GetTotalCount(con, baseTable, whereActive)
+	total, err := builders.GetTotalCount(con, baseTable, &whereActive)
 	if err != nil {
 		return res, err
 	}
@@ -153,7 +153,8 @@ func GetAllTagByCategory(page, pageSize int, path string, view string, category 
 	}
 
 	// Page
-	total, err := builders.GetTotalCount(con, baseTable+" "+join1, whereActive+" AND "+whereByCategory)
+	whereComb := whereActive + " AND " + whereByCategory
+	total, err := builders.GetTotalCount(con, baseTable+" "+join1, &whereComb)
 	if err != nil {
 		return res, err
 	}
