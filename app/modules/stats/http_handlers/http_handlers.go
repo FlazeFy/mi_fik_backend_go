@@ -39,3 +39,14 @@ func GetMostValidUntilUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, result)
 }
+
+func GetMostActiveUser(c echo.Context) error {
+	page, _ := strconv.Atoi(c.QueryParam("page"))
+	limit := c.Param("limit")
+	result, err := repositories.GetMostActiveUser(page, 10, "api/v1/stats/user/last_login/"+limit, limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
