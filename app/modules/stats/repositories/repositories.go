@@ -8,7 +8,6 @@ import (
 	"app/packages/helpers/generator"
 	"app/packages/helpers/response"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -230,8 +229,6 @@ func GetMostActiveUser(page, pageSize int, path string, limit string) (response.
 	selectTemplate := builders.GetTemplateStats(mainCol, baseTable, "most_appear", "DESC", &joinArgs)
 
 	sqlStatement = selectTemplate + " LIMIT " + limit
-
-	fmt.Println(sqlStatement)
 
 	// Exec
 	con := database.CreateCon()
